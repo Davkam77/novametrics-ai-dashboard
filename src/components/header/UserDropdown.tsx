@@ -9,19 +9,19 @@ import { useAppMode } from "../../context/ModeContext";
 export default function UserDropdown() {
   const navigate = useNavigate();
   const { status, profile, signOut } = useAuth();
-  const { setMode, setPendingMode, openChooser } = useAppMode();
+  const { mode, setMode, setPendingMode, openChooser } = useAppMode();
   const guestProfile = readPublicUserProfile();
   const [isOpen, setIsOpen] = useState(false);
 
-  const isAuthenticated = status === "authenticated" && Boolean(profile);
-  const displayName = isAuthenticated
+  const isRealMode = mode === "real" && status === "authenticated" && Boolean(profile);
+  const visibleName = isRealMode
     ? profile?.displayName ?? guestProfile.name
     : guestProfile.name;
-  const initials = isAuthenticated
+  const visibleInitials = isRealMode
     ? profile?.initials ?? guestProfile.initials
     : guestProfile.initials;
-  const email = isAuthenticated ? profile?.email ?? guestProfile.email : guestProfile.email;
-  const role = isAuthenticated
+  const visibleEmail = isRealMode ? profile?.email ?? guestProfile.email : guestProfile.email;
+  const visibleRole = isRealMode
     ? profile?.role === "owner"
       ? "Owner"
       : "User"
@@ -55,14 +55,14 @@ export default function UserDropdown() {
         aria-label="Open user menu"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
-          {initials}
+          {visibleInitials}
         </span>
         <span className="hidden text-left sm:block">
           <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-            {displayName}
+            {visibleName}
           </span>
           <span className="block text-xs text-gray-500 dark:text-gray-400">
-            {role}
+            {visibleRole}
           </span>
         </span>
         <svg
@@ -91,22 +91,24 @@ export default function UserDropdown() {
         <div className="border-b border-gray-100 px-4 py-4 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-sm font-bold text-white">
-              {initials}
+              {visibleInitials}
             </span>
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {displayName}
+                {visibleName}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{email}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {visibleEmail}
+              </p>
               <p className="mt-1 text-xs font-medium text-gray-400 dark:text-gray-500">
-                {role}
+                {visibleRole}
               </p>
             </div>
           </div>
         </div>
 
         <div className="px-2 py-2">
-          {isAuthenticated ? (
+          {isRealMode ? (
             <>
               <DropdownItem
                 tag="a"

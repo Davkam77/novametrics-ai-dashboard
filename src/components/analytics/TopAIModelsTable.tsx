@@ -34,8 +34,8 @@ export default function TopAIModelsTable({
         </p>
       </div>
 
-      <div className="max-w-full overflow-x-auto lg:overflow-visible">
-        <Table className="w-full min-w-[960px] table-auto lg:min-w-0">
+      <div className="max-w-full overflow-x-auto">
+        <Table className="w-full min-w-[960px] table-auto xl:min-w-0 xl:table-fixed">
           <TableHeader className="border-b border-gray-100 dark:border-gray-800">
             <TableRow>
               <TableCell

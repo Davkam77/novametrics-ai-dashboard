@@ -12,6 +12,7 @@ import type {
   UserItem,
   WorkspaceSettings,
 } from "../types/analytics";
+import { defaultPublicUserProfile } from "./publicUserProfile";
 
 export const analyticsDateRanges: DateRangeOption[] = [
   {
@@ -160,9 +161,9 @@ const endpointBase: Omit<EndpointPerformanceItem, "requestCount" | "averageRespo
 
 const userRows: UserItem[] = [
   {
-    initials: "DM",
-    name: "Davit Marikyan",
-    email: "davit.marikyan@novametrics.ai",
+    initials: defaultPublicUserProfile.initials,
+    name: defaultPublicUserProfile.name,
+    email: defaultPublicUserProfile.email,
     plan: "Enterprise",
     status: "Active",
     lastActive: "2 min ago",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { readPublicUserProfile } from "../../data/publicUserProfile";
 
 const userMenuItems = [
   {
@@ -15,6 +16,7 @@ const userMenuItems = [
 ];
 
 export default function UserDropdown() {
+  const profile = readPublicUserProfile();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -26,14 +28,14 @@ export default function UserDropdown() {
         aria-label="Open user menu"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
-          DM
+          {profile.initials}
         </span>
         <span className="hidden text-left sm:block">
           <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-            Davit Marikyan
+            {profile.name}
           </span>
           <span className="block text-xs text-gray-500 dark:text-gray-400">
-            Workspace admin
+            {profile.role}
           </span>
         </span>
         <svg
@@ -62,14 +64,14 @@ export default function UserDropdown() {
         <div className="border-b border-gray-100 px-4 py-4 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-sm font-bold text-white">
-              DM
+              {profile.initials}
             </span>
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                Davit Marikyan
+                {profile.name}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                davit.marikyan@novametrics.ai
+                {profile.email}
               </p>
             </div>
           </div>

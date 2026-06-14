@@ -74,7 +74,7 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        className="right-0 mt-3 w-[340px] overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-theme-lg dark:border-gray-800 dark:bg-gray-950 sm:w-[380px]"
+        className="right-0 mt-3 flex w-[340px] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-theme-lg dark:border-gray-800 dark:bg-gray-950 sm:w-[380px] max-md:!fixed max-md:!left-4 max-md:!right-4 max-md:!top-[calc(4.75rem+env(safe-area-inset-top))] max-md:!mt-0 max-md:!z-50 max-md:!w-auto max-md:!max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-5.75rem)]"
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 dark:border-gray-800">
           <div>
@@ -108,7 +108,7 @@ export default function NotificationDropdown() {
           </button>
         </div>
 
-        <div className="max-h-[420px] overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {notifications.map((notification) => (
             <DropdownItem
               key={notification.title}
@@ -135,7 +135,7 @@ export default function NotificationDropdown() {
 
         <Link
           to="/settings"
-          className="block border-t border-gray-100 px-4 py-3 text-center text-sm font-medium text-brand-600 hover:bg-brand-50 dark:border-gray-800 dark:text-brand-300 dark:hover:bg-brand-500/10"
+          className="block shrink-0 border-t border-gray-100 px-4 py-3 text-center text-sm font-medium text-brand-600 hover:bg-brand-50 dark:border-gray-800 dark:text-brand-300 dark:hover:bg-brand-500/10"
           onClick={() => setIsOpen(false)}
         >
           Notification settings

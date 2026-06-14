@@ -73,9 +73,6 @@ const AppHeader: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="hidden rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-300 md:inline-flex">
-            Demo workspace
-          </span>
           <ThemeToggleButton />
           <NotificationDropdown />
           <UserDropdown />

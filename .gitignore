@@ -12,7 +12,8 @@ dist
 dist-ssr
 .vercel/
 .env
-.env.*
+.env.local
+.env.*.local
 *.local
 
 # Editor directories and files

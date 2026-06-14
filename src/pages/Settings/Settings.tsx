@@ -3,6 +3,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadCrumb from "../../components/common/PageBreadCrumb";
 import { useTheme } from "../../context/ThemeContext";
 import type { WorkspaceSettings } from "../../types/analytics";
+import { useAuth } from "../../context/AuthContext";
 
 const STORAGE_KEY = "novametrics-workspace-settings";
 
@@ -65,14 +66,24 @@ function readSettings(): SettingsFormState {
 
 export default function Settings() {
   const { setTheme } = useTheme();
+  const { status, profile, configurationError, updateDisplayName } = useAuth();
   const [form, setForm] = useState<SettingsFormState>(defaultFormState);
   const [saveMessage, setSaveMessage] = useState("");
+  const [accountDisplayName, setAccountDisplayName] = useState("");
+  const [accountMessage, setAccountMessage] = useState("");
+  const [accountLoading, setAccountLoading] = useState(false);
 
   useEffect(() => {
     const saved = readSettings();
     setForm(saved);
     setTheme(saved.theme);
   }, [setTheme]);
+
+  useEffect(() => {
+    if (status === "authenticated" && profile) {
+      setAccountDisplayName(profile.displayName);
+    }
+  }, [profile, status]);
 
   const updateField = <K extends keyof SettingsFormState>(
     key: K,
@@ -101,24 +112,99 @@ export default function Settings() {
     setSaveMessage("Settings saved.");
   };
 
+  const handleAccountSave = async () => {
+    setAccountMessage("");
+
+    if (!accountDisplayName.trim()) {
+      setAccountMessage("Display name is required.");
+      return;
+    }
+
+    setAccountLoading(true);
+
+    try {
+      const result = await updateDisplayName(accountDisplayName);
+      setAccountMessage(result.message);
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
   return (
     <>
       <PageMeta
         title="NovaMetrics AI | Settings"
-        description="Workspace preferences, notifications, and theme selection."
+        description="Workspace preferences, notifications, account profile, and theme selection."
       />
 
       <div className="space-y-6">
         <PageBreadCrumb pageTitle="Settings" />
 
         <section className="grid grid-cols-12 gap-4 md:gap-6">
+          <div className="col-span-12 rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="mb-5">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Account profile
+              </h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Your authenticated profile lives in Supabase. Only the display
+                name is editable here for now.
+              </p>
+            </div>
+
+            {status === "authenticated" && profile ? (
+              <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Display name
+                  </span>
+                  <input
+                    type="text"
+                    value={accountDisplayName}
+                    onChange={(event) => setAccountDisplayName(event.target.value)}
+                    className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-brand-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-white"
+                  />
+                </label>
+
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-gray-400">
+                    Account email
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-gray-900 dark:text-white">
+                    {profile.email}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAccountSave}
+                  disabled={accountLoading}
+                  className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-500 px-4 text-sm font-semibold text-white shadow-theme-sm transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {accountLoading ? "Saving..." : "Save profile"}
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                {configurationError ||
+                  "Sign in to edit your authenticated profile. Demo Mode keeps using local guest preferences."}
+              </div>
+            )}
+
+            {accountMessage && (
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                {accountMessage}
+              </p>
+            )}
+          </div>
+
           <div className="col-span-12 xl:col-span-7 rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
             <div className="mb-5">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Workspace profile
+                Workspace preferences
               </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Manage workspace identity and visual preferences.
+                Manage local demo preferences used by the public dashboard.
               </p>
             </div>
 

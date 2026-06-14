@@ -1,23 +1,50 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { readPublicUserProfile } from "../../data/publicUserProfile";
-
-const userMenuItems = [
-  {
-    label: "Workspace settings",
-    to: "/settings",
-  },
-  {
-    label: "AI usage dashboard",
-    to: "/ai-usage",
-  },
-];
+import { useAuth } from "../../context/AuthContext";
+import { useAppMode } from "../../context/ModeContext";
 
 export default function UserDropdown() {
-  const profile = readPublicUserProfile();
+  const navigate = useNavigate();
+  const { status, profile, signOut } = useAuth();
+  const { setMode, setPendingMode, openChooser } = useAppMode();
+  const guestProfile = readPublicUserProfile();
   const [isOpen, setIsOpen] = useState(false);
+
+  const isAuthenticated = status === "authenticated" && Boolean(profile);
+  const displayName = isAuthenticated
+    ? profile?.displayName ?? guestProfile.name
+    : guestProfile.name;
+  const initials = isAuthenticated
+    ? profile?.initials ?? guestProfile.initials
+    : guestProfile.initials;
+  const email = isAuthenticated ? profile?.email ?? guestProfile.email : guestProfile.email;
+  const role = isAuthenticated
+    ? profile?.role === "owner"
+      ? "Owner"
+      : "User"
+    : guestProfile.role;
+
+  const closeMenu = () => setIsOpen(false);
+
+  const handleOpenChooser = () => {
+    closeMenu();
+    openChooser();
+  };
+
+  const handleBackToDemo = () => {
+    setMode("demo");
+    setPendingMode(null);
+    closeMenu();
+    navigate("/", { replace: true });
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    handleBackToDemo();
+  };
 
   return (
     <div className="relative">
@@ -28,14 +55,14 @@ export default function UserDropdown() {
         aria-label="Open user menu"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
-          {profile.initials}
+          {initials}
         </span>
         <span className="hidden text-left sm:block">
           <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-            {profile.name}
+            {displayName}
           </span>
           <span className="block text-xs text-gray-500 dark:text-gray-400">
-            {profile.role}
+            {role}
           </span>
         </span>
         <svg
@@ -58,44 +85,83 @@ export default function UserDropdown() {
 
       <Dropdown
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={closeMenu}
         className="right-0 mt-3 w-[280px] overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-theme-lg dark:border-gray-800 dark:bg-gray-950"
       >
         <div className="border-b border-gray-100 px-4 py-4 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-sm font-bold text-white">
-              {profile.initials}
+              {initials}
             </span>
             <div>
               <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {profile.name}
+                {displayName}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {profile.email}
+              <p className="text-xs text-gray-500 dark:text-gray-400">{email}</p>
+              <p className="mt-1 text-xs font-medium text-gray-400 dark:text-gray-500">
+                {role}
               </p>
             </div>
           </div>
         </div>
 
         <div className="px-2 py-2">
-          {userMenuItems.map((item) => (
-            <DropdownItem
-              key={item.to}
-              tag="a"
-              to={item.to}
-              onItemClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
-            >
-              <span className="h-2 w-2 rounded-full bg-brand-500" />
-              {item.label}
-            </DropdownItem>
-          ))}
+          {isAuthenticated ? (
+            <>
+              <DropdownItem
+                tag="a"
+                to="/settings"
+                onItemClick={closeMenu}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+              >
+                <span className="h-2 w-2 rounded-full bg-brand-500" />
+                Account Settings
+              </DropdownItem>
+              <DropdownItem
+                tag="button"
+                onItemClick={handleSignOut}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+              >
+                <span className="h-2 w-2 rounded-full bg-brand-500" />
+                Sign Out
+              </DropdownItem>
+            </>
+          ) : (
+            <>
+              <DropdownItem
+                tag="a"
+                to="/signin"
+                onItemClick={closeMenu}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+              >
+                <span className="h-2 w-2 rounded-full bg-brand-500" />
+                Sign In
+              </DropdownItem>
+              <DropdownItem
+                tag="a"
+                to="/signup"
+                onItemClick={closeMenu}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+              >
+                <span className="h-2 w-2 rounded-full bg-brand-500" />
+                Register
+              </DropdownItem>
+              <DropdownItem
+                tag="button"
+                onItemClick={handleOpenChooser}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+              >
+                <span className="h-2 w-2 rounded-full bg-brand-500" />
+                Explore Demo
+              </DropdownItem>
+            </>
+          )}
         </div>
 
         <div className="border-t border-gray-100 px-2 py-2 dark:border-gray-800">
           <Link
             to="/"
-            onClick={() => setIsOpen(false)}
+            onClick={handleBackToDemo}
             className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
           >
             <span className="h-2 w-2 rounded-full bg-brand-500" />

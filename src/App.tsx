@@ -9,6 +9,9 @@ import Users from "./pages/Users/Users";
 import Settings from "./pages/Settings/Settings";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
+import ForgotPassword from "./pages/AuthPages/ForgotPassword";
+import ResetPassword from "./pages/AuthPages/ResetPassword";
+import AuthCallback from "./pages/AuthPages/AuthCallback";
 import NotFound from "./pages/OtherPage/NotFound";
 
 export default function App() {
@@ -28,6 +31,9 @@ export default function App() {
 
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>

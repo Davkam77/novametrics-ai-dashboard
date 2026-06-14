@@ -7,6 +7,9 @@ interface ModalProps {
   children: React.ReactNode;
   showCloseButton?: boolean; // New prop to control close button visibility
   isFullscreen?: boolean; // Default to false for backwards compatibility
+  closeOnEscape?: boolean;
+  closeOnBackdrop?: boolean;
+  trapFocus?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -16,24 +19,27 @@ export const Modal: React.FC<ModalProps> = ({
   className,
   showCloseButton = true, // Default to true for backwards compatibility
   isFullscreen = false,
+  closeOnEscape = true,
+  closeOnBackdrop = true,
+  trapFocus = false,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (closeOnEscape && event.key === "Escape") {
         onClose();
       }
     };
 
-    if (isOpen) {
+    if (isOpen && closeOnEscape) {
       document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, closeOnEscape]);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,6 +53,57 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !trapFocus || !modalRef.current) {
+      return;
+    }
+
+    const focusableSelectors = [
+      "button:not([disabled])",
+      "[href]",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])",
+    ];
+
+    const focusableElements = Array.from(
+      modalRef.current.querySelectorAll<HTMLElement>(focusableSelectors.join(",")),
+    ).filter((element) => element.offsetParent !== null);
+
+    const firstFocusable = focusableElements[0];
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+
+    firstFocusable?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab" || focusableElements.length === 0) {
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus?.();
+    };
+  }, [isOpen, trapFocus]);
+
   if (!isOpen) return null;
 
   const contentClasses = isFullscreen
@@ -55,7 +112,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
-      {!isFullscreen && (
+      {!isFullscreen && closeOnBackdrop && (
         <div
           className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
           onClick={onClose}
@@ -63,6 +120,9 @@ export const Modal: React.FC<ModalProps> = ({
       )}
       <div
         ref={modalRef}
+        tabIndex={-1}
+        aria-modal="true"
+        role="dialog"
         className={`${contentClasses}  ${className}`}
         onClick={(e) => e.stopPropagation()}
       >

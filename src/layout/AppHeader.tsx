@@ -1,4 +1,5 @@
 import { useSidebar } from "../context/SidebarContext";
+import ModeSwitcher from "../components/header/ModeSwitcher";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
@@ -73,6 +74,7 @@ const AppHeader: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <ModeSwitcher />
           <ThemeToggleButton />
           <NotificationDropdown />
           <UserDropdown />

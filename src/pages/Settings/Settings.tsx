@@ -118,7 +118,7 @@ export default function Settings() {
                 Workspace profile
               </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Adjust the workspace identity and visual preferences used across the demo.
+                Manage workspace identity and visual preferences.
               </p>
             </div>
 
@@ -186,7 +186,7 @@ export default function Settings() {
                 Alerts
               </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Configure the workspace notifications shown in the demo UI.
+                Configure workspace notification preferences.
               </p>
             </div>
 

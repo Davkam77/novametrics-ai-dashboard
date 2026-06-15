@@ -22,6 +22,18 @@ type LoadingState = {
   errorMessage: string | null;
 };
 
+type LoadUserContextResult =
+  | {
+      profile: AuthProfile;
+      membership: WorkspaceMembership;
+      errorMessage: null;
+    }
+  | {
+      profile: null;
+      membership: null;
+      errorMessage: string;
+    };
+
 const defaultState: LoadingState = {
   status: "loading",
   session: null,
@@ -85,36 +97,22 @@ function buildInitials(displayName: string, email: string) {
   return initials || "GU";
 }
 
-function buildFallbackProfile(user: User): AuthProfile {
-  const displayName =
-    (user.user_metadata?.display_name as string | undefined)?.trim() ||
-    user.email?.split("@")[0]?.replace(/[._-]/g, " ") ||
-    "Workspace user";
-
-  return {
-    id: user.id,
-    email: user.email ?? "unknown@novametrics.ai",
-    displayName,
-    initials: buildInitials(displayName, user.email ?? ""),
-    avatarUrl: (user.user_metadata?.avatar_url as string | undefined) ?? null,
-    role: "user",
-    workspaceId: null,
-    workspaceName: null,
-    workspacePlan: null,
-    workspaceStatus: null,
-  };
+function buildAccountSetupErrorMessage() {
+  return "Your workspace setup is incomplete. Please contact support or try again.";
 }
 
-async function loadUserContext(user: User): Promise<{
-  profile: AuthProfile;
-  membership: WorkspaceMembership | null;
-}> {
+function buildAccountQueryErrorMessage() {
+  return "Unable to load your workspace right now. Please try again.";
+}
+
+async function loadUserContext(user: User): Promise<LoadUserContextResult> {
   const client = supabase;
 
   if (!client) {
     return {
-      profile: buildFallbackProfile(user),
+      profile: null,
       membership: null,
+      errorMessage: supabaseConfigMessage ?? buildAccountQueryErrorMessage(),
     };
   }
 
@@ -137,47 +135,89 @@ async function loadUserContext(user: User): Promise<{
     membershipPromise,
   ]);
 
-  const fallbackProfile = buildFallbackProfile(user);
+  if (profileResult.error) {
+    return {
+      profile: null,
+      membership: null,
+      errorMessage: sanitizeSupabaseError(
+        profileResult.error,
+        buildAccountQueryErrorMessage(),
+      ),
+    };
+  }
+
+  if (membershipResult.error) {
+    return {
+      profile: null,
+      membership: null,
+      errorMessage: sanitizeSupabaseError(
+        membershipResult.error,
+        buildAccountQueryErrorMessage(),
+      ),
+    };
+  }
+
   const profileRow = profileResult.data;
   const membershipRow = membershipResult.data;
 
-  const workspaceData = membershipRow?.workspace_id
-    ? await client
-        .from("workspaces")
-        .select("id, name, plan, status")
-        .eq("id", membershipRow.workspace_id)
-        .maybeSingle()
-    : { data: null };
+  if (!profileRow || !membershipRow || membershipRow.status !== "active") {
+    return {
+      profile: null,
+      membership: null,
+      errorMessage: buildAccountSetupErrorMessage(),
+    };
+  }
 
-  const displayName =
-    profileRow?.display_name?.trim() ||
-    (user.user_metadata?.display_name as string | undefined)?.trim() ||
-    fallbackProfile.displayName;
+  const workspaceResult = await client
+    .from("workspaces")
+    .select("id, name, plan, status")
+    .eq("id", membershipRow.workspace_id)
+    .maybeSingle();
 
-  const email = profileRow?.email?.trim() || user.email || fallbackProfile.email;
-  const role = membershipRow?.role === "owner" ? "owner" : "user";
-  const workspace = workspaceData.data;
+  if (workspaceResult.error) {
+    return {
+      profile: null,
+      membership: null,
+      errorMessage: sanitizeSupabaseError(
+        workspaceResult.error,
+        buildAccountQueryErrorMessage(),
+      ),
+    };
+  }
+
+  const workspace = workspaceResult.data;
+
+  if (!workspace) {
+    return {
+      profile: null,
+      membership: null,
+      errorMessage: buildAccountSetupErrorMessage(),
+    };
+  }
+
+  const displayName = profileRow.display_name.trim();
+  const email = profileRow.email?.trim() || user.email || "";
+  const role = membershipRow.role === "owner" ? "owner" : "user";
 
   return {
     profile: {
-      id: profileRow?.id ?? user.id,
+      id: profileRow.id,
       email,
       displayName,
       initials: buildInitials(displayName, email),
-      avatarUrl: profileRow?.avatar_url ?? fallbackProfile.avatarUrl,
+      avatarUrl: profileRow.avatar_url ?? null,
       role,
-      workspaceId: workspace?.id ?? membershipRow?.workspace_id ?? null,
-      workspaceName: workspace?.name ?? null,
-      workspacePlan: workspace?.plan ?? null,
-      workspaceStatus: workspace?.status ?? null,
+      workspaceId: workspace.id,
+      workspaceName: workspace.name,
+      workspacePlan: workspace.plan,
+      workspaceStatus: workspace.status,
     },
-    membership: membershipRow
-      ? {
-          workspaceId: membershipRow.workspace_id,
-          role,
-          status: membershipRow.status,
-        }
-      : null,
+    membership: {
+      workspaceId: membershipRow.workspace_id,
+      role,
+      status: membershipRow.status,
+    },
+    errorMessage: null,
   };
 }
 
@@ -190,7 +230,21 @@ async function applySession(session: Session): Promise<LoadingState> {
     };
   }
 
-  const { profile, membership } = await loadUserContext(session.user);
+  const { profile, membership, errorMessage } = await loadUserContext(
+    session.user,
+  );
+
+  if (errorMessage) {
+    return {
+      status: "error",
+      session,
+      user: session.user,
+      profile: null,
+      membership: null,
+      errorMessage,
+    };
+  }
+
   return {
     status: "authenticated",
     session,

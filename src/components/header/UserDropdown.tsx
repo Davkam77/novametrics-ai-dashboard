@@ -8,24 +8,44 @@ import { useAppMode } from "../../context/ModeContext";
 
 export default function UserDropdown() {
   const navigate = useNavigate();
-  const { status, profile, signOut } = useAuth();
+  const { status, session, profile, signOut, refreshProfile, configurationError } = useAuth();
   const { mode, setMode, setPendingMode, openChooser } = useAppMode();
   const guestProfile = readPublicUserProfile();
   const [isOpen, setIsOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const isRealMode = mode === "real" && status === "authenticated" && Boolean(profile);
+  const isAccountError = mode === "real" && status === "error" && Boolean(session);
+
+  const errorProfile = {
+    name: "Workspace setup incomplete",
+    initials: "!!",
+    role: "Needs attention",
+    email: "Profile data unavailable",
+  };
+
   const visibleName = isRealMode
     ? profile?.displayName ?? guestProfile.name
-    : guestProfile.name;
+    : isAccountError
+      ? errorProfile.name
+      : guestProfile.name;
   const visibleInitials = isRealMode
     ? profile?.initials ?? guestProfile.initials
-    : guestProfile.initials;
-  const visibleEmail = isRealMode ? profile?.email ?? guestProfile.email : guestProfile.email;
+    : isAccountError
+      ? errorProfile.initials
+      : guestProfile.initials;
+  const visibleEmail = isRealMode
+    ? profile?.email ?? guestProfile.email
+    : isAccountError
+      ? errorProfile.email
+      : guestProfile.email;
   const visibleRole = isRealMode
     ? profile?.role === "owner"
       ? "Owner"
       : "User"
-    : guestProfile.role;
+    : isAccountError
+      ? errorProfile.role
+      : guestProfile.role;
 
   const closeMenu = () => setIsOpen(false);
 
@@ -39,6 +59,16 @@ export default function UserDropdown() {
     setPendingMode(null);
     closeMenu();
     navigate("/", { replace: true });
+  };
+
+  const handleRetryLoad = async () => {
+    setIsRetrying(true);
+
+    try {
+      await refreshProfile();
+    } finally {
+      setIsRetrying(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -103,13 +133,29 @@ export default function UserDropdown() {
               <p className="mt-1 text-xs font-medium text-gray-400 dark:text-gray-500">
                 {visibleRole}
               </p>
+              {isAccountError && (
+                <p className="mt-2 text-xs text-amber-600 dark:text-amber-300">
+                  {configurationError ||
+                    "Your workspace setup is incomplete. Please try again or sign out."}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
         <div className="px-2 py-2">
-          {isRealMode ? (
+          {isRealMode || isAccountError ? (
             <>
+              {isAccountError && (
+                <DropdownItem
+                  tag="button"
+                  onItemClick={handleRetryLoad}
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-white"
+                >
+                  <span className="h-2 w-2 rounded-full bg-amber-500" />
+                  {isRetrying ? "Retrying..." : "Retry load"}
+                </DropdownItem>
+              )}
               <DropdownItem
                 tag="a"
                 to="/settings"

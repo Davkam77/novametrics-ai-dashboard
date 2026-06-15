@@ -10,7 +10,7 @@ function isSafeReturnPath(pathname: string) {
 }
 
 export default function ModeChooserModal() {
-  const { status } = useAuth();
+  const { session, refreshProfile } = useAuth();
   const {
     mode,
     chooserOpen,
@@ -38,9 +38,10 @@ export default function ModeChooserModal() {
   const handleReal = () => {
     closeChooser();
 
-    if (status === "authenticated") {
+    if (session) {
       setMode("real");
       setPendingMode(null);
+      void refreshProfile();
       navigate(destination, { replace: true });
       return;
     }
@@ -110,7 +111,7 @@ export default function ModeChooserModal() {
               private data.
             </p>
             <span className="mt-6 inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-600 shadow-sm ring-1 ring-inset ring-gray-200 dark:bg-gray-900 dark:text-brand-300 dark:ring-gray-800">
-              {status === "authenticated" ? "Open Real Mode" : "Continue to Sign In"}
+              {session ? "Open Real Mode" : "Continue to Sign In"}
             </span>
           </button>
         </div>

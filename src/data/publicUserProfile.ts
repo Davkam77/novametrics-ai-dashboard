@@ -8,7 +8,7 @@ export type PublicUserProfile = {
 export const defaultPublicUserProfile: PublicUserProfile = {
   name: "Guest User",
   initials: "GU",
-  role: "Viewer",
+  role: "Guest",
   email: "guest@novametrics.ai",
 };
 

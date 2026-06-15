@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { GridIcon, BoltIcon, PieChartIcon, TableIcon, UserCircleIcon, PageIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth } from "../context/AuthContext";
+import { useAppMode } from "../context/ModeContext";
 
 type NavItem = {
   label: string;
@@ -52,8 +54,13 @@ const navItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
+  const { mode } = useAppMode();
+  const { status, profile } = useAuth();
 
   const isCompact = !isExpanded && !isHovered && !isMobileOpen;
+  const canSeeUsers =
+    mode !== "real" ||
+    (status === "authenticated" && profile?.platformRole === "admin");
 
   return (
     <aside
@@ -89,7 +96,7 @@ const AppSidebar: React.FC = () => {
           {isCompact ? "N" : "Navigation"}
         </p>
         <ul className="space-y-2">
-          {navItems.map((item) => {
+          {navItems.filter((item) => item.path !== "/users" || canSeeUsers).map((item) => {
             const active = location.pathname === item.path;
 
             return (

@@ -154,9 +154,16 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
     .limit(1)
     .maybeSingle();
 
-  const [profileResult, membershipResult] = await Promise.all([
+  const platformRolePromise = client
+    .from("platform_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const [profileResult, membershipResult, platformRoleResult] = await Promise.all([
     profilePromise,
     membershipPromise,
+    platformRolePromise,
   ]);
 
   if (profileResult.error) {
@@ -167,8 +174,13 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
     return queryErrorResult(membershipResult.error);
   }
 
+  if (platformRoleResult.error) {
+    return queryErrorResult(platformRoleResult.error);
+  }
+
   const profileRow = profileResult.data;
   const membershipRow = membershipResult.data;
+  const platformRoleRow = platformRoleResult.data;
 
   if (!profileRow || !membershipRow || membershipRow.status !== "active") {
     return incompleteSetupResult();
@@ -192,7 +204,8 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
 
   const displayName = profileRow.display_name.trim();
   const email = profileRow.email?.trim() || user.email || "";
-  const role = membershipRow.role === "owner" ? "owner" : "user";
+  const workspaceRole = membershipRow.role === "owner" ? "owner" : "member";
+  const platformRole = platformRoleRow?.role === "admin" ? "admin" : "user";
 
   return {
     profile: {
@@ -201,7 +214,8 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
       displayName,
       initials: buildInitials(displayName, email),
       avatarUrl: profileRow.avatar_url ?? null,
-      role,
+      platformRole,
+      workspaceRole,
       workspaceId: workspace.id,
       workspaceName: workspace.name,
       workspacePlan: workspace.plan,
@@ -209,7 +223,7 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
     },
     membership: {
       workspaceId: membershipRow.workspace_id,
-      role,
+      role: workspaceRole,
       status: membershipRow.status,
     },
     errorMessage: null,
@@ -586,7 +600,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .from("profiles")
       .update({
         display_name: normalizedDisplayName,
-        updated_at: new Date().toISOString(),
       })
       .eq("id", state.user.id);
 

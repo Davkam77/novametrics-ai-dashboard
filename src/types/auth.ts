@@ -8,13 +8,18 @@ export type AuthStatus = "loading" | "guest" | "authenticated" | "error";
 
 export type AuthAccountErrorKind = "query_error" | "incomplete_setup" | null;
 
+export type PlatformRole = "user" | "admin";
+
+export type WorkspaceRole = "owner" | "member";
+
 export interface AuthProfile {
   id: string;
   email: string;
   displayName: string;
   initials: string;
   avatarUrl: string | null;
-  role: "owner" | "user";
+  platformRole: PlatformRole;
+  workspaceRole: WorkspaceRole;
   workspaceId: string | null;
   workspaceName: string | null;
   workspacePlan: string | null;
@@ -23,7 +28,7 @@ export interface AuthProfile {
 
 export interface WorkspaceMembership {
   workspaceId: string;
-  role: "owner" | "user";
+  role: WorkspaceRole;
   status: string;
 }
 

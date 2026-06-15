@@ -56,8 +56,8 @@ export default function UserDropdown() {
       ? errorProfile.email
       : guestProfile.email;
   const visibleRole = isRealMode
-    ? profile?.role === "owner"
-      ? "Owner"
+    ? profile?.platformRole === "admin"
+      ? "Admin"
       : "User"
     : isAccountError
       ? errorProfile.role

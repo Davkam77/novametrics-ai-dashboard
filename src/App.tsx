@@ -5,7 +5,6 @@ import Home from "./pages/Dashboard/Home";
 import AIUsage from "./pages/AIUsage/AIUsage";
 import Automations from "./pages/Automations/Automations";
 import APIAnalytics from "./pages/APIAnalytics/APIAnalytics";
-import Users from "./pages/Users/Users";
 import Settings from "./pages/Settings/Settings";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
@@ -13,6 +12,7 @@ import ForgotPassword from "./pages/AuthPages/ForgotPassword";
 import ResetPassword from "./pages/AuthPages/ResetPassword";
 import AuthCallback from "./pages/AuthPages/AuthCallback";
 import NotFound from "./pages/OtherPage/NotFound";
+import UsersAccessGate from "./components/auth/UsersAccessGate";
 
 export default function App() {
   return (
@@ -24,7 +24,7 @@ export default function App() {
           <Route path="/ai-usage" element={<AIUsage />} />
           <Route path="/automations" element={<Automations />} />
           <Route path="/api-analytics" element={<APIAnalytics />} />
-          <Route path="/users" element={<Users />} />
+          <Route path="/users" element={<UsersAccessGate />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/error-404" element={<NotFound />} />
         </Route>

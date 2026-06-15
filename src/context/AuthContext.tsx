@@ -8,6 +8,7 @@ import {
 import type {
   AuthActionResult,
   AuthContextValue,
+  AuthAccountErrorKind,
   AuthProfile,
   AuthStatus,
   WorkspaceMembership,
@@ -15,6 +16,7 @@ import type {
 
 type LoadingState = {
   status: AuthStatus;
+  accountErrorKind: AuthAccountErrorKind;
   session: Session | null;
   user: User | null;
   profile: AuthProfile | null;
@@ -27,15 +29,18 @@ type LoadUserContextResult =
       profile: AuthProfile;
       membership: WorkspaceMembership;
       errorMessage: null;
+      accountErrorKind: null;
     }
   | {
       profile: null;
       membership: null;
       errorMessage: string;
+      accountErrorKind: Exclude<AuthAccountErrorKind, null>;
     };
 
 const defaultState: LoadingState = {
   status: "loading",
+  accountErrorKind: null,
   session: null,
   user: null,
   profile: null,
@@ -105,6 +110,24 @@ function buildAccountQueryErrorMessage() {
   return "Unable to load your workspace right now. Please try again.";
 }
 
+function queryErrorResult(error: unknown): LoadUserContextResult {
+  return {
+    profile: null,
+    membership: null,
+    errorMessage: sanitizeSupabaseError(error, buildAccountQueryErrorMessage()),
+    accountErrorKind: "query_error",
+  };
+}
+
+function incompleteSetupResult(): LoadUserContextResult {
+  return {
+    profile: null,
+    membership: null,
+    errorMessage: buildAccountSetupErrorMessage(),
+    accountErrorKind: "incomplete_setup",
+  };
+}
+
 async function loadUserContext(user: User): Promise<LoadUserContextResult> {
   const client = supabase;
 
@@ -113,6 +136,7 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
       profile: null,
       membership: null,
       errorMessage: supabaseConfigMessage ?? buildAccountQueryErrorMessage(),
+      accountErrorKind: "query_error",
     };
   }
 
@@ -136,36 +160,18 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
   ]);
 
   if (profileResult.error) {
-    return {
-      profile: null,
-      membership: null,
-      errorMessage: sanitizeSupabaseError(
-        profileResult.error,
-        buildAccountQueryErrorMessage(),
-      ),
-    };
+    return queryErrorResult(profileResult.error);
   }
 
   if (membershipResult.error) {
-    return {
-      profile: null,
-      membership: null,
-      errorMessage: sanitizeSupabaseError(
-        membershipResult.error,
-        buildAccountQueryErrorMessage(),
-      ),
-    };
+    return queryErrorResult(membershipResult.error);
   }
 
   const profileRow = profileResult.data;
   const membershipRow = membershipResult.data;
 
   if (!profileRow || !membershipRow || membershipRow.status !== "active") {
-    return {
-      profile: null,
-      membership: null,
-      errorMessage: buildAccountSetupErrorMessage(),
-    };
+    return incompleteSetupResult();
   }
 
   const workspaceResult = await client
@@ -175,24 +181,13 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
     .maybeSingle();
 
   if (workspaceResult.error) {
-    return {
-      profile: null,
-      membership: null,
-      errorMessage: sanitizeSupabaseError(
-        workspaceResult.error,
-        buildAccountQueryErrorMessage(),
-      ),
-    };
+    return queryErrorResult(workspaceResult.error);
   }
 
   const workspace = workspaceResult.data;
 
   if (!workspace) {
-    return {
-      profile: null,
-      membership: null,
-      errorMessage: buildAccountSetupErrorMessage(),
-    };
+    return incompleteSetupResult();
   }
 
   const displayName = profileRow.display_name.trim();
@@ -218,6 +213,7 @@ async function loadUserContext(user: User): Promise<LoadUserContextResult> {
       status: membershipRow.status,
     },
     errorMessage: null,
+    accountErrorKind: null,
   };
 }
 
@@ -230,13 +226,13 @@ async function applySession(session: Session): Promise<LoadingState> {
     };
   }
 
-  const { profile, membership, errorMessage } = await loadUserContext(
-    session.user,
-  );
+  const { profile, membership, errorMessage, accountErrorKind } =
+    await loadUserContext(session.user);
 
   if (errorMessage) {
     return {
       status: "error",
+      accountErrorKind,
       session,
       user: session.user,
       profile: null,
@@ -247,6 +243,7 @@ async function applySession(session: Session): Promise<LoadingState> {
 
   return {
     status: "authenticated",
+    accountErrorKind: null,
     session,
     user: session.user,
     profile,
@@ -258,6 +255,7 @@ async function applySession(session: Session): Promise<LoadingState> {
 function guestState(): LoadingState {
   return {
     status: isSupabaseConfigured ? "guest" : "error",
+    accountErrorKind: null,
     session: null,
     user: null,
     profile: null,
@@ -297,6 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             error,
             "Unable to load the current authentication session.",
           ),
+          accountErrorKind: "query_error",
         });
         return;
       }
@@ -315,6 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               sessionError,
               "Unable to load the authenticated profile.",
             ),
+            accountErrorKind: "query_error",
           });
         }
         return;
@@ -350,6 +350,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             sessionError,
             "Unable to refresh the authenticated profile.",
           ),
+          accountErrorKind: "query_error",
         });
       }
     });
@@ -376,6 +377,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           error,
           "Unable to refresh the authenticated profile.",
         ),
+        accountErrorKind: "query_error",
       }));
     }
   };
@@ -606,6 +608,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextValue = {
     status: state.status,
+    accountErrorKind: state.accountErrorKind,
     isConfigured: isSupabaseConfigured,
     configurationError: state.errorMessage,
     session: state.session,

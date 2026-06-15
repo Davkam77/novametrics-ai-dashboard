@@ -6,6 +6,8 @@ export type PendingMode = "real" | null;
 
 export type AuthStatus = "loading" | "guest" | "authenticated" | "error";
 
+export type AuthAccountErrorKind = "query_error" | "incomplete_setup" | null;
+
 export interface AuthProfile {
   id: string;
   email: string;
@@ -33,6 +35,7 @@ export interface AuthActionResult {
 
 export interface AuthContextValue {
   status: AuthStatus;
+  accountErrorKind: AuthAccountErrorKind;
   isConfigured: boolean;
   configurationError: string | null;
   session: Session | null;

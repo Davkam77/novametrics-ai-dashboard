@@ -8,20 +8,36 @@ import { useAppMode } from "../../context/ModeContext";
 
 export default function UserDropdown() {
   const navigate = useNavigate();
-  const { status, session, profile, signOut, refreshProfile, configurationError } = useAuth();
+  const {
+    status,
+    session,
+    profile,
+    signOut,
+    refreshProfile,
+    accountErrorKind,
+  } = useAuth();
   const { mode, setMode, setPendingMode, openChooser } = useAppMode();
   const guestProfile = readPublicUserProfile();
   const [isOpen, setIsOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
 
   const isRealMode = mode === "real" && status === "authenticated" && Boolean(profile);
   const isAccountError = mode === "real" && status === "error" && Boolean(session);
+  const accountErrorTitle =
+    accountErrorKind === "query_error"
+      ? "Unable to load workspace"
+      : "Workspace setup incomplete";
+  const accountErrorDescription =
+    accountErrorKind === "query_error"
+      ? "Unable to load your workspace right now. Please try again."
+      : "Your workspace setup is incomplete. Please contact support or try again.";
 
   const errorProfile = {
-    name: "Workspace setup incomplete",
+    name: accountErrorTitle,
     initials: "!!",
     role: "Needs attention",
-    email: "Profile data unavailable",
+    email: accountErrorDescription,
   };
 
   const visibleName = isRealMode
@@ -57,6 +73,7 @@ export default function UserDropdown() {
   const handleBackToDemo = () => {
     setMode("demo");
     setPendingMode(null);
+    setSignOutError(null);
     closeMenu();
     navigate("/", { replace: true });
   };
@@ -72,8 +89,16 @@ export default function UserDropdown() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    handleBackToDemo();
+    setSignOutError(null);
+
+    const result = await signOut();
+
+    if (result.ok) {
+      handleBackToDemo();
+      return;
+    }
+
+    setSignOutError(result.message);
   };
 
   return (
@@ -135,8 +160,12 @@ export default function UserDropdown() {
               </p>
               {isAccountError && (
                 <p className="mt-2 text-xs text-amber-600 dark:text-amber-300">
-                  {configurationError ||
-                    "Your workspace setup is incomplete. Please try again or sign out."}
+                  {accountErrorDescription}
+                </p>
+              )}
+              {signOutError && (
+                <p className="mt-2 text-xs text-red-600 dark:text-red-300">
+                  {signOutError}
                 </p>
               )}
             </div>

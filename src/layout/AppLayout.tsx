@@ -11,7 +11,14 @@ import { useEffect, useState } from "react";
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   const { mode, setMode, setPendingMode } = useAppMode();
-  const { status, session, configurationError, refreshProfile, signOut } = useAuth();
+  const {
+    status,
+    session,
+    configurationError,
+    accountErrorKind,
+    refreshProfile,
+    signOut,
+  } = useAuth();
   const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
@@ -46,6 +53,15 @@ const LayoutContent: React.FC = () => {
     }
   };
 
+  const accountErrorTitle =
+    accountErrorKind === "query_error"
+      ? "Unable to load workspace"
+      : "Workspace setup incomplete";
+  const accountErrorDescription =
+    accountErrorKind === "query_error"
+      ? "Unable to load your workspace right now. Please try again."
+      : "Your workspace setup is incomplete. Please contact support or try again.";
+
   return (
     <div className="min-h-screen xl:flex">
       <div>
@@ -64,11 +80,12 @@ const LayoutContent: React.FC = () => {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold">
-                    Your workspace setup is incomplete.
+                    {accountErrorTitle}
                   </p>
                   <p className="mt-1 text-sm text-amber-800 dark:text-amber-100/90">
-                    {configurationError ||
-                      "Please try again or sign out to return to Demo Mode."}
+                    {accountErrorDescription ||
+                      configurationError ||
+                      "Please try again or sign out."}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">

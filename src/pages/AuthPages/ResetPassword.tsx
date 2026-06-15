@@ -6,8 +6,8 @@ export default function ResetPassword() {
   return (
     <>
       <PageMeta
-        title="NovaMetrics AI | Reset Password"
-        description="Set a new password for your NovaMetrics AI account."
+        title="NovaMetrics AI | Password Recovery Unavailable"
+        description="Password recovery is temporarily unavailable for NovaMetrics AI."
       />
       <AuthLayout>
         <ResetPasswordForm />

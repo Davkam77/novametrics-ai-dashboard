@@ -101,16 +101,14 @@ export default function SignUpForm() {
         return;
       }
 
-      if (result.requiresEmailConfirmation) {
-        setPendingMode("real");
-        setMode("demo");
-        setSuccess(result.message);
+      if (result.sessionCreated || status === "authenticated") {
+        setMode("real");
+        setPendingMode(null);
+        navigate(returnTo, { replace: true });
         return;
       }
 
-      setMode("real");
-      setPendingMode(null);
-      navigate(returnTo, { replace: true });
+      setSuccess(result.message || "Account created successfully.");
     } finally {
       setLoading(false);
     }

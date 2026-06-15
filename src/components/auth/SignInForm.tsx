@@ -151,17 +151,14 @@ export default function SignInForm() {
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <Link
-                  to="/forgot-password"
-                  className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Forgot Password?
-                </Link>
-                <Link
                   to="/signup"
                   className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                 >
                   Register
                 </Link>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  Password recovery is temporarily unavailable.
+                </span>
               </div>
 
               <div>

@@ -31,6 +31,7 @@ export interface AuthActionResult {
   ok: boolean;
   message: string;
   requiresEmailConfirmation?: boolean;
+  sessionCreated?: boolean;
 }
 
 export interface AuthContextValue {

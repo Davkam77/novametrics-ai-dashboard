@@ -62,7 +62,7 @@ function sanitizeSupabaseError(error: unknown, fallback: string) {
     lowerMessage.includes("email not confirmed") ||
     lowerMessage.includes("email address not confirmed")
   ) {
-    return "Check your email to confirm your account.";
+    return "Your account is not ready yet. Please sign in to continue.";
   }
 
   if (
@@ -461,13 +461,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return {
         ok: true,
         message: "Signed up successfully.",
+        sessionCreated: true,
       };
     }
 
     return {
       ok: true,
-      message: "Check your email to confirm your account.",
+      message: "Account created successfully. Please sign in to continue.",
       requiresEmailConfirmation: true,
+      sessionCreated: false,
     };
   };
 
@@ -521,7 +523,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return {
       ok: true,
-      message: "Check your email to reset your password.",
+      message: "Password recovery is temporarily unavailable.",
     };
   };
 

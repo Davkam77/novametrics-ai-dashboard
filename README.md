@@ -10,9 +10,20 @@ dashboard, or admin panel solution for upcoming web projects.
 
 ## NovaMetrics AI Demo Note
 
-This workspace has been adapted into a portfolio demo named NovaMetrics AI. The dashboard uses fictional local mock
-data, localStorage-backed settings, and client-side UI state only. It does not connect to a backend, production sync
-service, billing system, or real customer data.
+This workspace has been adapted into a portfolio demo named NovaMetrics AI. Demo Mode still uses fictional local mock
+data and client-side UI state, while Stage 3 adds the real API key and Groq proxy flow for authenticated users.
+
+## Stage 3 Notes
+
+Stage 3 adds secure NovaMetrics API keys and a server-side Groq proxy on Vercel. The public API endpoint is:
+
+```text
+POST /api/v1/chat/completions
+Authorization: Bearer nvm_live_...
+```
+
+The UI for key management lives at `/api-keys`. Raw keys are shown once at creation time only. Prompts, responses, and
+Authorization headers are not stored in the database.
 
 With TailAdmin, you get access to all the necessary dashboard UI components, elements, and pages required to build a
 feature-rich and complete dashboard or admin panel. Whether you're building dashboard or admin panel for a complex web

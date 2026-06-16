@@ -25,4 +25,14 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['api/**/*.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+  },
 )

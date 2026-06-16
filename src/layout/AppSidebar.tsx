@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { GridIcon, BoltIcon, PieChartIcon, TableIcon, UserCircleIcon, PageIcon } from "../icons";
+import { GridIcon, BoltIcon, PieChartIcon, TableIcon, UserCircleIcon, PageIcon, LockIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../context/AuthContext";
 import { useAppMode } from "../context/ModeContext";
@@ -38,6 +38,12 @@ const navItems: NavItem[] = [
     description: "Traffic and latency",
   },
   {
+    label: "API Keys",
+    path: "/api-keys",
+    icon: <LockIcon />,
+    description: "Secure access tokens",
+  },
+  {
     label: "Users",
     path: "/users",
     icon: <UserCircleIcon />,
@@ -61,6 +67,7 @@ const AppSidebar: React.FC = () => {
   const canSeeUsers =
     mode !== "real" ||
     (status === "authenticated" && profile?.platformRole === "admin");
+  const canSeeApiKeys = mode === "real" && status === "authenticated" && Boolean(profile);
 
   return (
     <aside
@@ -96,7 +103,13 @@ const AppSidebar: React.FC = () => {
           {isCompact ? "N" : "Navigation"}
         </p>
         <ul className="space-y-2">
-          {navItems.filter((item) => item.path !== "/users" || canSeeUsers).map((item) => {
+          {navItems
+            .filter(
+              (item) =>
+                (item.path !== "/users" || canSeeUsers) &&
+                (item.path !== "/api-keys" || canSeeApiKeys),
+            )
+            .map((item) => {
             const active = location.pathname === item.path;
 
             return (
@@ -124,7 +137,7 @@ const AppSidebar: React.FC = () => {
                 </Link>
               </li>
             );
-          })}
+            })}
         </ul>
       </nav>
 

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAdminSupabaseClient } from "./supabase";
-import { limitText } from "./http";
+import { getAdminSupabaseClient } from "./supabase.js";
+import { limitText } from "./http.js";
 
 export type UsageSummary = {
   workspace_id: string;

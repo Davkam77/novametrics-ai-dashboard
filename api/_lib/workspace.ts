@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { errorResponse } from "./http";
-import { getAdminSupabaseClient } from "./supabase";
+import { errorResponse } from "./http.js";
+import { getAdminSupabaseClient } from "./supabase.js";
 
 export type WorkspaceContext = {
   workspaceId: string;

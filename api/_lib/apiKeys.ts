@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from "node:crypto";
-import { env } from "./env";
-import { limitText } from "./http";
+import { env } from "./env.js";
+import { limitText } from "./http.js";
 
 export type ApiKeyRow = {
   id: string;

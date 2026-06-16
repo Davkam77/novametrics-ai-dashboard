@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { errorResponse, jsonResponse, methodNotAllowed } from "../../_lib/http";
-import { requireVerifiedUser } from "../../_lib/auth";
-import { resolveWorkspaceForUser } from "../../_lib/workspace";
-import { getUsageSummary } from "../../_lib/usage";
-import { handleNodeRequest } from "../../_lib/vercel";
+import { errorResponse, jsonResponse, methodNotAllowed } from "../../_lib/http.js";
+import { requireVerifiedUser } from "../../_lib/auth.js";
+import { resolveWorkspaceForUser } from "../../_lib/workspace.js";
+import { getUsageSummary } from "../../_lib/usage.js";
+import { handleNodeRequest } from "../../_lib/vercel.js";
 
 async function webHandler(request: Request) {
   if (request.method === "OPTIONS") {

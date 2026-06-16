@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { env } from "../../_lib/env";
-import { errorResponse, jsonResponse, methodNotAllowed, parseJsonBody } from "../../_lib/http";
-import { requireVerifiedUser } from "../../_lib/auth";
-import { resolveWorkspaceForUser } from "../../_lib/workspace";
+import { env } from "../../_lib/env.js";
+import { errorResponse, jsonResponse, methodNotAllowed, parseJsonBody } from "../../_lib/http.js";
+import { requireVerifiedUser } from "../../_lib/auth.js";
+import { resolveWorkspaceForUser } from "../../_lib/workspace.js";
 import {
   buildKeyLastFour,
   buildKeyPrefix,
@@ -10,9 +10,9 @@ import {
   generateRawApiKey,
   normalizeApiKeyName,
   toApiKeyListItem,
-} from "../../_lib/apiKeys";
-import { getAdminSupabaseClient } from "../../_lib/supabase";
-import { handleNodeRequest } from "../../_lib/vercel";
+} from "../../_lib/apiKeys.js";
+import { getAdminSupabaseClient } from "../../_lib/supabase.js";
+import { handleNodeRequest } from "../../_lib/vercel.js";
 
 async function webHandler(request: Request) {
   if (request.method === "OPTIONS") {

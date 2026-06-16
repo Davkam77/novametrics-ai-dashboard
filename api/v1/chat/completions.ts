@@ -1,11 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { env, isModelAllowed } from "../../_lib/env";
-import { errorResponse, jsonResponse, methodNotAllowed, parseJsonBody, getBearerToken } from "../../_lib/http";
-import { digestApiKey, isValidApiKeyFormat } from "../../_lib/apiKeys";
-import { parseChatCompletionRequest, estimateChatTokens } from "../../_lib/validation";
-import { admitRequest, completeRequest } from "../../_lib/usage";
-import { callGroqChatCompletion } from "../../_lib/groq";
-import { handleNodeRequest } from "../../_lib/vercel";
+import { env, isModelAllowed } from "../../_lib/env.js";
+import { errorResponse, jsonResponse, methodNotAllowed, parseJsonBody, getBearerToken } from "../../_lib/http.js";
+import { digestApiKey, isValidApiKeyFormat } from "../../_lib/apiKeys.js";
+import { parseChatCompletionRequest, estimateChatTokens } from "../../_lib/validation.js";
+import { admitRequest, completeRequest } from "../../_lib/usage.js";
+import { callGroqChatCompletion } from "../../_lib/groq.js";
+import { handleNodeRequest } from "../../_lib/vercel.js";
 
 function buildRequestIdResponse(requestId: string, body: unknown, status = 200) {
   return jsonResponse(body, {

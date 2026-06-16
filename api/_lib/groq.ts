@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { env } from "./env";
-import { sanitizeErrorText } from "./validation";
+import { env } from "./env.js";
+import { sanitizeErrorText } from "./validation.js";
 
 export type GroqMessage = {
   role: "system" | "user" | "assistant";

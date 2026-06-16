@@ -1,5 +1,5 @@
-import { env, getMessageContentLimit, isModelAllowed } from "./env";
-import { limitText } from "./http";
+import { env, getMessageContentLimit, isModelAllowed } from "./env.js";
+import { limitText } from "./http.js";
 
 export type ChatMessage = {
   role: "system" | "user" | "assistant";

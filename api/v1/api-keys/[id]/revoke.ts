@@ -1,11 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { errorResponse, jsonResponse, methodNotAllowed } from "../../../_lib/http";
-import { requireVerifiedUser } from "../../../_lib/auth";
-import { resolveWorkspaceForUser } from "../../../_lib/workspace";
-import { toApiKeyListItem } from "../../../_lib/apiKeys";
-import { getAdminSupabaseClient } from "../../../_lib/supabase";
-import { isUuid } from "../../../_lib/validation";
-import { handleNodeRequest } from "../../../_lib/vercel";
+import { errorResponse, jsonResponse, methodNotAllowed } from "../../../_lib/http.js";
+import { requireVerifiedUser } from "../../../_lib/auth.js";
+import { resolveWorkspaceForUser } from "../../../_lib/workspace.js";
+import { toApiKeyListItem } from "../../../_lib/apiKeys.js";
+import { getAdminSupabaseClient } from "../../../_lib/supabase.js";
+import { isUuid } from "../../../_lib/validation.js";
+import { handleNodeRequest } from "../../../_lib/vercel.js";
 
 function readRouteParam(request: Request) {
   const pathname = new URL(request.url).pathname;

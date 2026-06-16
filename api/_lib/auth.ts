@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
-import { getBearerToken, errorResponse } from "./http";
-import { getAdminSupabaseClient } from "./supabase";
+import { getBearerToken, errorResponse } from "./http.js";
+import { getAdminSupabaseClient } from "./supabase.js";
 
 export type VerifiedSession =
   | {

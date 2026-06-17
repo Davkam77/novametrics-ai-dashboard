@@ -3,6 +3,14 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/api/v1/api-keys/revoke",
+      "destination": "/api/v1/api-keys/revoke"
+    },
+    {
+      "source": "/api/v1/api-keys/:id/revoke",
+      "destination": "/api/v1/api-keys/revoke?id=:id"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

@@ -1,16 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { methodNotAllowed } from "../../../_lib/http.js";
+import { errorResponse, methodNotAllowed, parseJsonBody } from "../../../_lib/http.js";
 import { requireVerifiedUser } from "../../../_lib/auth.js";
 import { resolveWorkspaceForUser } from "../../../_lib/workspace.js";
 import { revokeApiKeyInWorkspace } from "../../../_lib/apiKeys.js";
 import { isUuid } from "../../../_lib/validation.js";
 import { handleNodeRequest } from "../../../_lib/vercel.js";
-
-function readRouteParam(request: Request) {
-  const pathname = new URL(request.url).pathname;
-  const parts = pathname.split("/");
-  return parts[4] ?? "";
-}
 
 async function webHandler(request: Request) {
   if (request.method === "OPTIONS") {
@@ -39,16 +33,20 @@ async function webHandler(request: Request) {
     return workspaceResult.response;
   }
 
-  const apiKeyId = readRouteParam(request);
+  const bodyResult = await parseJsonBody<Record<string, unknown>>(request, 4_096);
+  const url = new URL(request.url);
+
+  const bodyId =
+    bodyResult.ok && typeof bodyResult.data.id === "string" ? bodyResult.data.id : "";
+  const queryId = url.searchParams.get("id") ?? "";
+  const apiKeyId = bodyId || queryId;
+
+  if (!bodyResult.ok && !queryId) {
+    return bodyResult.response;
+  }
 
   if (!isUuid(apiKeyId)) {
-    return new Response(JSON.stringify({ error: { code: "invalid_request", message: "Invalid API key identifier." } }), {
-      status: 400,
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Cache-Control": "no-store",
-      },
-    });
+    return errorResponse(400, "invalid_request", "Invalid API key identifier.");
   }
 
   return revokeApiKeyInWorkspace({

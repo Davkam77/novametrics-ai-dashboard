@@ -1,6 +1,8 @@
 import { createHmac, randomBytes } from "node:crypto";
+import { errorResponse, jsonResponse } from "./http.js";
 import { env } from "./env.js";
 import { limitText } from "./http.js";
+import { getAdminSupabaseClient } from "./supabase.js";
 
 export type ApiKeyRow = {
   id: string;
@@ -68,4 +70,75 @@ export function toApiKeyListItem(row: ApiKeyRow): ApiKeyListItem {
     last_used_at: row.last_used_at,
     revoked_at: row.revoked_at,
   };
+}
+
+export async function revokeApiKeyInWorkspace(input: {
+  workspaceId: string;
+  apiKeyId: string;
+  revokedByUserId: string;
+}) {
+  const client = getAdminSupabaseClient();
+  const currentResult = await client
+    .from("api_keys")
+    .select(
+      "id, workspace_id, created_by_user_id, name, key_prefix, key_last_four, status, created_at, last_used_at, revoked_at, revoked_by_user_id",
+    )
+    .eq("id", input.apiKeyId)
+    .eq("workspace_id", input.workspaceId)
+    .maybeSingle();
+
+  if (currentResult.error) {
+    return errorResponse(500, "internal_error", "Unable to load the API key.");
+  }
+
+  if (!currentResult.data) {
+    return errorResponse(404, "not_found", "API key not found.");
+  }
+
+  const now = new Date().toISOString();
+
+  if (currentResult.data.status !== "revoked") {
+    const updateResult = await client
+      .from("api_keys")
+      .update({
+        status: "revoked",
+        revoked_at: now,
+        revoked_by_user_id: input.revokedByUserId,
+      })
+      .eq("id", input.apiKeyId)
+      .eq("workspace_id", input.workspaceId)
+      .select(
+        "id, workspace_id, created_by_user_id, name, key_prefix, key_last_four, status, created_at, last_used_at, revoked_at, revoked_by_user_id",
+      )
+      .single();
+
+    if (updateResult.error || !updateResult.data) {
+      return errorResponse(500, "internal_error", "Unable to revoke the API key.");
+    }
+
+    return jsonResponse(
+      {
+        api_key: toApiKeyListItem(updateResult.data),
+        revoked: true,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      },
+    );
+  }
+
+  return jsonResponse(
+    {
+      api_key: toApiKeyListItem(currentResult.data),
+      revoked: true,
+      idempotent: true,
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
 }

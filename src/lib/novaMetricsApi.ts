@@ -137,10 +137,11 @@ export async function listNovaMetricsApiKeys(token: string) {
 
 export async function revokeNovaMetricsApiKey(token: string, id: string) {
   return requestJson<{ api_key: NovaMetricsApiKey; revoked: boolean; idempotent?: boolean }>(
-    `/api-keys/${id}/revoke`,
+    "/api-keys/revoke",
     token,
     {
       method: "POST",
+      body: JSON.stringify({ id }),
     },
   );
 }

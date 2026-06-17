@@ -132,6 +132,63 @@ function sumSuccessfulTokens(rows: UsageRequestRow[]) {
     .reduce((sum, row) => sum + Number(row.total_tokens ?? 0), 0);
 }
 
+async function countRows(
+  client: SupabaseClient,
+  table: string,
+  filters: Array<{
+    column: string;
+    value: string;
+    op: "eq" | "gte";
+  }> = [],
+) {
+  let query = client.from(table).select("id", { count: "exact" });
+
+  for (const filter of filters) {
+    if (filter.op === "eq") {
+      query = query.eq(filter.column, filter.value);
+    } else {
+      query = query.gte(filter.column, filter.value);
+    }
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    return 0;
+  }
+
+  return count ?? data?.length ?? 0;
+}
+
+async function fetchRows(
+  client: SupabaseClient,
+  table: string,
+  columns: string,
+  filters: Array<{
+    column: string;
+    value: string;
+    op: "eq" | "gte";
+  }> = [],
+) {
+  let query = client.from(table).select(columns);
+
+  for (const filter of filters) {
+    if (filter.op === "eq") {
+      query = query.eq(filter.column, filter.value);
+    } else {
+      query = query.gte(filter.column, filter.value);
+    }
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    return [];
+  }
+
+  return data ?? [];
+}
+
 export async function admitRequest(
   input: {
     keyDigest: string;
@@ -329,39 +386,22 @@ export async function getGlobalAdminOverview(
   const month = monthBounds(now);
   const day = dayStart(now);
 
-  const [usersResult, workspacesResult, activeKeysResult, monthRequestsResult, dayRequestsResult] =
-    await Promise.all([
-      client.from("profiles").select("id", { count: "exact", head: true }),
-      client.from("workspaces").select("id", { count: "exact", head: true }),
-      client
-        .from("api_keys")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "active"),
-      client
-        .from("api_requests")
-        .select("status, total_tokens, created_at")
-        .gte("created_at", month.start),
-      client
-        .from("api_requests")
-        .select("status, total_tokens, created_at")
-        .gte("created_at", day),
-    ]);
-
-  if (usersResult.error || workspacesResult.error || activeKeysResult.error) {
-    return null;
-  }
-
-  if (monthRequestsResult.error || dayRequestsResult.error) {
-    return null;
-  }
-
-  const monthRequests = monthRequestsResult.data ?? [];
-  const dayRequests = dayRequestsResult.data ?? [];
+  const [totalUsers, totalWorkspaces, activeApiKeys, monthRequests, dayRequests] = await Promise.all([
+    countRows(client, "profiles"),
+    countRows(client, "workspaces"),
+    countRows(client, "api_keys", [{ op: "eq", column: "status", value: "active" }]),
+    fetchRows(client, "api_requests", "status, total_tokens, created_at", [
+      { op: "gte", column: "created_at", value: month.start },
+    ]),
+    fetchRows(client, "api_requests", "status, total_tokens, created_at", [
+      { op: "gte", column: "created_at", value: day },
+    ]),
+  ]);
 
   return {
-    total_users: usersResult.count ?? 0,
-    total_workspaces: workspacesResult.count ?? 0,
-    active_api_keys: activeKeysResult.count ?? 0,
+    total_users: totalUsers,
+    total_workspaces: totalWorkspaces,
+    active_api_keys: activeApiKeys,
     requests_today: dayRequests.length,
     requests_this_month: monthRequests.length,
     tokens_this_month: sumSuccessfulTokens(monthRequests),

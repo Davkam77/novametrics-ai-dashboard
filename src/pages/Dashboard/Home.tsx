@@ -14,7 +14,6 @@ import RecentActivityTable from "../../components/analytics/RecentActivityTable"
 import RecentRequestsTable from "../../components/analytics/RecentRequestsTable";
 import TopAIModelsTable from "../../components/analytics/TopAIModelsTable";
 import EndpointPerformanceTable from "../../components/analytics/EndpointPerformanceTable";
-import RealAnalyticsPlaceholder from "../../components/analytics/RealAnalyticsPlaceholder";
 import { useAuth } from "../../context/AuthContext";
 import { useAppMode } from "../../context/ModeContext";
 import {
@@ -33,8 +32,10 @@ import {
   TaskIcon,
 } from "../../icons";
 import {
+  getNovaMetricsAdminOverview,
   getNovaMetricsUsageSummary,
   listNovaMetricsUsageRequests,
+  type NovaMetricsAdminOverview,
   type NovaMetricsUsageRequest,
   type NovaMetricsUsageSummary,
   NovaMetricsApiError,
@@ -170,6 +171,99 @@ function buildRealMetrics(summary: NovaMetricsUsageSummary, workspaceName: strin
   ];
 }
 
+function buildAdminMetrics(overview: NovaMetricsAdminOverview): RealMetricCard[] {
+  return [
+    {
+      key: "total-users",
+      label: "Total Users",
+      value: formatCount(overview.total_users),
+      change: "Global",
+      comparisonPeriod: "All authenticated users",
+      tone: "neutral",
+      tooltip: "Total user profiles in the platform.",
+      icon: <GroupIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+    {
+      key: "total-workspaces",
+      label: "Total Workspaces",
+      value: formatCount(overview.total_workspaces),
+      change: "Global",
+      comparisonPeriod: "All workspaces",
+      tone: "neutral",
+      tooltip: "Total active workspaces in the platform.",
+      icon: <TableIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+    {
+      key: "active-api-keys",
+      label: "Active API Keys",
+      value: formatCount(overview.active_api_keys),
+      change: "Global",
+      comparisonPeriod: "All active keys",
+      tone: "neutral",
+      tooltip: "Total active NovaMetrics API keys.",
+      icon: <BoltIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+    {
+      key: "requests-today",
+      label: "Requests Today",
+      value: formatCount(overview.requests_today),
+      change: "Today",
+      comparisonPeriod: "Platform-wide today",
+      tone: "neutral",
+      tooltip: "Platform requests created today.",
+      icon: <TableIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+    {
+      key: "requests-month",
+      label: "Requests This Month",
+      value: formatCount(overview.requests_this_month),
+      change: "Month",
+      comparisonPeriod: "Platform-wide current month",
+      tone: "neutral",
+      tooltip: "Platform requests created in the current month.",
+      icon: <TableIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+    {
+      key: "tokens-month",
+      label: "Tokens This Month",
+      value: formatCount(overview.tokens_this_month),
+      change: "Month",
+      comparisonPeriod: "Platform-wide current month",
+      tone: "neutral",
+      tooltip: "Tokens recorded across successful requests this month.",
+      icon: <BoltIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+    {
+      key: "successful-requests",
+      label: "Successful Requests",
+      value: formatCount(overview.successful_requests),
+      change: "Success",
+      comparisonPeriod: "Platform-wide current month",
+      tone: "positive",
+      tooltip: "Requests completed successfully this month.",
+      icon: <TaskIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+    {
+      key: "failed-requests",
+      label: "Failed Requests",
+      value: formatCount(overview.failed_requests),
+      change: "Errors",
+      comparisonPeriod: "Platform-wide current month",
+      tone: "negative",
+      tooltip: "Requests that failed this month.",
+      icon: <AlertIcon />,
+      className: "col-span-12 sm:col-span-6 xl:col-span-3",
+    },
+  ];
+}
+
 function LoadingOverview() {
   return (
     <section className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
@@ -203,6 +297,35 @@ function LoadingOverview() {
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           The table will appear once the API replies.
         </p>
+      </div>
+    </section>
+  );
+}
+
+function LoadingAdminOverview() {
+  return (
+    <section className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-sm dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="max-w-3xl">
+          <span className="inline-flex rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-brand-600 shadow-theme-xs dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-300">
+            Real Mode
+          </span>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+            Loading global overview...
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400 sm:text-base">
+            Reading live platform KPI for admin access.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-12 gap-4 md:gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div
+            key={index}
+            className="col-span-12 h-[156px] animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.04] sm:col-span-6 xl:col-span-3"
+          />
+        ))}
       </div>
     </section>
   );
@@ -249,6 +372,127 @@ function RealModeAccessIssue({
         </button>
       </div>
     </section>
+  );
+}
+
+function RealAdminOverview() {
+  const { session, profile } = useAuth();
+  const [overview, setOverview] = useState<NovaMetricsAdminOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  const loadOverview = useCallback(async () => {
+    const token = session?.access_token?.trim() ?? "";
+
+    if (!token) {
+      setOverview(null);
+      setSessionExpired(true);
+      setErrorMessage("Your session expired. Please sign in again.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage(null);
+    setSessionExpired(false);
+
+    try {
+      const result = await getNovaMetricsAdminOverview(token);
+      setOverview(result);
+    } catch (error) {
+      setOverview(null);
+
+      if (error instanceof NovaMetricsApiError && error.status === 401) {
+        setSessionExpired(true);
+        setErrorMessage("Your session expired. Please sign in again.");
+      } else if (
+        error instanceof NovaMetricsApiError &&
+        error.status === 403 &&
+        error.code === "forbidden"
+      ) {
+        setSessionExpired(false);
+        setErrorMessage("Admin access required.");
+      } else if (error instanceof NovaMetricsApiError) {
+        setSessionExpired(false);
+        setErrorMessage(error.message);
+      } else {
+        setSessionExpired(false);
+        setErrorMessage("Unable to load admin overview.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [session?.access_token]);
+
+  useEffect(() => {
+    void loadOverview();
+  }, [loadOverview]);
+
+  if (loading && !overview) {
+    return <LoadingAdminOverview />;
+  }
+
+  if (errorMessage && !overview) {
+    return (
+      <RealModeAccessIssue
+        title={sessionExpired ? "Session expired" : "Unable to load admin overview"}
+        message={errorMessage}
+        onRetry={loadOverview}
+        showRetry={!sessionExpired}
+      />
+    );
+  }
+
+  const metrics = overview ? buildAdminMetrics(overview) : [];
+  const roleName = profile?.platformRole === "admin" ? "Admin" : "User";
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded-[28px] border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-brand-50 p-6 shadow-theme-sm dark:border-brand-500/20 dark:from-brand-500/10 dark:via-white/[0.03] dark:to-brand-500/5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <span className="inline-flex rounded-full border border-brand-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-brand-600 shadow-theme-xs dark:border-brand-500/20 dark:bg-white/[0.03] dark:text-brand-300">
+              Real Admin Overview
+            </span>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+              Global platform KPI
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400 sm:text-base">
+              Live platform totals for {roleName} access. Demo Mode and Real User
+              Overview remain unchanged.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => void loadOverview()}
+              disabled={loading}
+              className="inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white shadow-theme-sm transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-12 gap-4 md:gap-6">
+        {metrics.map((metric) => (
+          <MetricCard
+            key={metric.key}
+            label={metric.label}
+            value={metric.value}
+            change={metric.change}
+            comparisonPeriod={metric.comparisonPeriod}
+            tone={metric.tone}
+            tooltip={metric.tooltip}
+            icon={metric.icon}
+            className={metric.className}
+          />
+        ))}
+      </section>
+    </div>
   );
 }
 
@@ -434,7 +678,7 @@ export default function Home() {
   const pageTitle = isRealMode ? realPageTitle : "AI SaaS Analytics Dashboard";
   const pageDescription = isRealMode
     ? isRealAdmin
-      ? "Real platform analytics are not connected yet, so this overview stays empty until the backend analytics pipeline is ready."
+      ? "Live platform KPI for admins."
       : "Live workspace usage from NovaMetrics API keys."
     : "Executive overview of revenue, AI token usage, API traffic, and automation reliability.";
 
@@ -477,15 +721,7 @@ export default function Home() {
               showRetry={Boolean(session)}
             />
           ) : isRealAdmin ? (
-            <RealAnalyticsPlaceholder
-              role="admin"
-              pageTitle="Overview"
-              description="Real platform analytics are not connected yet, so this overview stays empty until the backend analytics pipeline is ready."
-              details={[
-                "Demo Mode remains available separately for the portfolio mock dashboard.",
-                "Global usage, token, request, and revenue analytics will be connected in Stage 4.",
-              ]}
-            />
+            <RealAdminOverview />
           ) : session?.access_token && profile ? (
             <RealUserOverview
               workspaceName={String(profile.workspaceName || "Workspace")}

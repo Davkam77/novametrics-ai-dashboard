@@ -59,6 +59,17 @@ export type NovaMetricsUsageRequestsResponse = {
   next_offset: number | null;
 };
 
+export type NovaMetricsAdminOverview = {
+  total_users: number;
+  total_workspaces: number;
+  active_api_keys: number;
+  requests_today: number;
+  requests_this_month: number;
+  tokens_this_month: number;
+  successful_requests: number;
+  failed_requests: number;
+};
+
 export class NovaMetricsApiError extends Error {
   status: number;
   code: string;
@@ -180,4 +191,11 @@ export async function listNovaMetricsUsageRequests(
       cache: "no-store",
     },
   );
+}
+
+export async function getNovaMetricsAdminOverview(token: string) {
+  return requestJson<NovaMetricsAdminOverview>("/admin/overview", token, {
+    method: "GET",
+    cache: "no-store",
+  });
 }

@@ -44,6 +44,17 @@ export type UsageRequestListResult = {
   next_offset: number | null;
 };
 
+export type GlobalAdminOverview = {
+  total_users: number;
+  total_workspaces: number;
+  active_api_keys: number;
+  requests_today: number;
+  requests_this_month: number;
+  tokens_this_month: number;
+  successful_requests: number;
+  failed_requests: number;
+};
+
 export type CompleteRequestInput = {
   requestId: string;
   status:
@@ -113,6 +124,12 @@ function dayStart(now = new Date()) {
 
 function sanitizeFailureMessage(message: string) {
   return limitText(message, 240);
+}
+
+function sumSuccessfulTokens(rows: UsageRequestRow[]) {
+  return rows
+    .filter((row) => row.status === "success")
+    .reduce((sum, row) => sum + Number(row.total_tokens ?? 0), 0);
 }
 
 export async function admitRequest(
@@ -302,5 +319,55 @@ export async function listUsageRequests(
     limit,
     offset,
     next_offset: items.length === limit ? offset + limit : null,
+  };
+}
+
+export async function getGlobalAdminOverview(
+  client: SupabaseClient = getAdminSupabaseClient(),
+): Promise<GlobalAdminOverview | null> {
+  const now = new Date();
+  const month = monthBounds(now);
+  const day = dayStart(now);
+
+  const [usersResult, workspacesResult, activeKeysResult, monthRequestsResult, dayRequestsResult] =
+    await Promise.all([
+      client.from("profiles").select("id", { count: "exact", head: true }),
+      client.from("workspaces").select("id", { count: "exact", head: true }),
+      client
+        .from("api_keys")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "active"),
+      client
+        .from("api_requests")
+        .select("status, total_tokens, created_at")
+        .gte("created_at", month.start),
+      client
+        .from("api_requests")
+        .select("status, total_tokens, created_at")
+        .gte("created_at", day),
+    ]);
+
+  if (usersResult.error || workspacesResult.error || activeKeysResult.error) {
+    return null;
+  }
+
+  if (monthRequestsResult.error || dayRequestsResult.error) {
+    return null;
+  }
+
+  const monthRequests = monthRequestsResult.data ?? [];
+  const dayRequests = dayRequestsResult.data ?? [];
+
+  return {
+    total_users: usersResult.count ?? 0,
+    total_workspaces: workspacesResult.count ?? 0,
+    active_api_keys: activeKeysResult.count ?? 0,
+    requests_today: dayRequests.length,
+    requests_this_month: monthRequests.length,
+    tokens_this_month: sumSuccessfulTokens(monthRequests),
+    successful_requests: monthRequests.filter((row) => row.status === "success").length,
+    failed_requests: monthRequests.filter(
+      (row) => row.status !== "success" && row.status !== "processing",
+    ).length,
   };
 }

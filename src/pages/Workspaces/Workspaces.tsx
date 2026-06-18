@@ -8,6 +8,11 @@ import { useAppMode } from "../../context/ModeContext";
 import { useAuth } from "../../context/AuthContext";
 import { listNovaMetricsAdminWorkspaces, NovaMetricsApiError, type NovaMetricsAdminWorkspace } from "../../lib/novaMetricsApi";
 import {
+  buildRangeLabel,
+  formatDateTime as formatCreatedAt,
+  formatShortId,
+} from "../../lib/formatters";
+import {
   Table,
   TableBody,
   TableCell,
@@ -29,31 +34,6 @@ const statusColors = {
   paused: "warning",
   disabled: "error",
 } as const;
-
-function formatCreatedAt(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function formatShortId(value: string) {
-  if (value.length <= 12) {
-    return value;
-  }
-
-  return `${value.slice(0, 8)}…${value.slice(-4)}`;
-}
-
-function buildRangeLabel(offset: number, total: number, itemCount: number) {
-  if (total === 0) {
-    return "0 of 0";
-  }
-
-  const start = offset + 1;
-  const end = Math.min(offset + itemCount, total);
-  return `${start}–${end} of ${total}`;
-}
 
 function DemoWorkspacesPage() {
   return (

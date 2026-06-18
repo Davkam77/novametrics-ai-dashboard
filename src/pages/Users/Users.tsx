@@ -31,6 +31,11 @@ import {
   NovaMetricsApiError,
   type NovaMetricsAdminUser,
 } from "../../lib/novaMetricsApi";
+import {
+  buildRangeLabel,
+  formatDateTime as formatCreatedAt,
+  formatShortId,
+} from "../../lib/formatters";
 
 const statusColors = {
   Active: "success",
@@ -42,31 +47,6 @@ const roleColors = {
   admin: "success",
   user: "light",
 } as const;
-
-function formatCreatedAt(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function formatShortId(value: string) {
-  if (value.length <= 12) {
-    return value;
-  }
-
-  return `${value.slice(0, 8)}…${value.slice(-4)}`;
-}
-
-function buildRangeLabel(offset: number, total: number, itemCount: number) {
-  if (total === 0) {
-    return "0 of 0";
-  }
-
-  const start = offset + 1;
-  const end = Math.min(offset + itemCount, total);
-  return `${start}–${end} of ${total}`;
-}
 
 function DemoUsersPage() {
   const [range, setRange] = useState(defaultAnalyticsRange);

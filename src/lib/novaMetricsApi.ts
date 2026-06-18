@@ -70,6 +70,22 @@ export type NovaMetricsAdminOverview = {
   failed_requests: number;
 };
 
+export type NovaMetricsAdminUser = {
+  user_id: string;
+  display_name: string | null;
+  platform_role: "admin" | "user";
+  workspace_count: number;
+  created_at: string;
+};
+
+export type NovaMetricsAdminUsersResponse = {
+  items: NovaMetricsAdminUser[];
+  limit: number;
+  offset: number;
+  total: number;
+  next_offset: number | null;
+};
+
 export class NovaMetricsApiError extends Error {
   status: number;
   code: string;
@@ -198,4 +214,28 @@ export async function getNovaMetricsAdminOverview(token: string) {
     method: "GET",
     cache: "no-store",
   });
+}
+
+export async function listNovaMetricsAdminUsers(
+  token: string,
+  params?: { limit?: number; offset?: number },
+) {
+  const query = new URLSearchParams();
+
+  if (params?.limit !== undefined) {
+    query.set("limit", String(params.limit));
+  }
+
+  if (params?.offset !== undefined) {
+    query.set("offset", String(params.offset));
+  }
+
+  return requestJson<NovaMetricsAdminUsersResponse>(
+    `/admin/users${query.toString() ? `?${query.toString()}` : ""}`,
+    token,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+  );
 }

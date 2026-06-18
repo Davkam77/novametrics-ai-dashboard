@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useSidebar } from "../context/SidebarContext";
 import ModeSwitcher from "../components/header/ModeSwitcher";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
@@ -5,9 +6,29 @@ import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 
 const AppHeader: React.FC = () => {
-  const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const {
+    isMobileOpen,
+    toggleSidebar,
+    toggleMobileSidebar,
+    closeMobileSidebar,
+  } = useSidebar();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (isMobileOpen) {
+      setIsUserMenuOpen(false);
+    }
+  }, [isMobileOpen]);
+
+  useEffect(() => {
+    if (isUserMenuOpen) {
+      closeMobileSidebar();
+    }
+  }, [closeMobileSidebar, isUserMenuOpen]);
 
   const handleToggle = () => {
+    setIsUserMenuOpen(false);
+
     if (window.innerWidth >= 1024) {
       toggleSidebar();
       return;
@@ -77,7 +98,10 @@ const AppHeader: React.FC = () => {
           <ModeSwitcher />
           <ThemeToggleButton />
           <NotificationDropdown />
-          <UserDropdown />
+          <UserDropdown
+            isOpen={isUserMenuOpen}
+            onOpenChange={setIsUserMenuOpen}
+          />
         </div>
       </div>
     </header>

@@ -6,6 +6,7 @@ interface DropdownProps {
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -13,25 +14,48 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onClose,
   children,
   className = "",
+  anchorRef,
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      const dropdownNode = dropdownRef.current;
+      const anchorNode = anchorRef?.current;
+
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
-        !(event.target as HTMLElement).closest(".dropdown-toggle")
+        dropdownNode?.contains(target) ||
+        anchorNode?.contains(target)
       ) {
+        return;
+      }
+
+      onClose();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         onClose();
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [anchorRef, isOpen, onClose]);
 
   if (!isOpen) return null;
 

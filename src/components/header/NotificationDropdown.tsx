@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
@@ -40,9 +40,10 @@ const toneStyles = {
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
+  const dropdownAnchorRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="relative">
+    <div ref={dropdownAnchorRef} className="relative">
       <button
         type="button"
         className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-theme-xs transition hover:border-brand-200 hover:text-brand-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
@@ -74,6 +75,7 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        anchorRef={dropdownAnchorRef}
         className="right-0 mt-3 flex w-[340px] max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-theme-lg dark:border-gray-800 dark:bg-gray-950 sm:w-[380px] max-md:!fixed max-md:!left-4 max-md:!right-4 max-md:!top-[calc(4.75rem+env(safe-area-inset-top))] max-md:!mt-0 max-md:!z-50 max-md:!w-auto max-md:!max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-5.75rem)]"
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 dark:border-gray-800">

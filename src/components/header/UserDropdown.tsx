@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { readPublicUserProfile } from "../../data/publicUserProfile";
 import { useAuth } from "../../context/AuthContext";
 import { useAppMode } from "../../context/ModeContext";
+import { useSidebar } from "../../context/SidebarContext";
 
-export default function UserDropdown() {
+type UserDropdownProps = {
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
+};
+
+export default function UserDropdown({ isOpen, onOpenChange }: UserDropdownProps) {
   const navigate = useNavigate();
   const {
     status,
@@ -17,10 +23,14 @@ export default function UserDropdown() {
     accountErrorKind,
   } = useAuth();
   const { mode, setMode, setPendingMode, openChooser } = useAppMode();
+  const { isMobileOpen, closeMobileSidebar } = useSidebar();
   const guestProfile = readPublicUserProfile();
-  const [isOpen, setIsOpen] = useState(false);
+  const dropdownAnchorRef = useRef<HTMLDivElement>(null);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const menuIsOpen = isOpen ?? internalIsOpen;
+  const setMenuIsOpen = onOpenChange ?? setInternalIsOpen;
 
   const isRealMode = mode === "real" && status === "authenticated" && Boolean(profile);
   const isAccountError = mode === "real" && status === "error" && Boolean(session);
@@ -63,7 +73,21 @@ export default function UserDropdown() {
       ? errorProfile.role
       : guestProfile.role;
 
-  const closeMenu = () => setIsOpen(false);
+  useEffect(() => {
+    if (isMobileOpen && menuIsOpen) {
+      setMenuIsOpen(false);
+    }
+  }, [isMobileOpen, menuIsOpen, setMenuIsOpen]);
+
+  const closeMenu = () => setMenuIsOpen(false);
+
+  const handleTriggerClick = () => {
+    if (!menuIsOpen && isMobileOpen) {
+      closeMobileSidebar();
+    }
+
+    setMenuIsOpen(!menuIsOpen);
+  };
 
   const handleOpenChooser = () => {
     closeMenu();
@@ -102,12 +126,14 @@ export default function UserDropdown() {
   };
 
   return (
-    <div className="relative">
+    <div ref={dropdownAnchorRef} className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen((value) => !value)}
+        onClick={handleTriggerClick}
         className="flex items-center gap-3 rounded-full border border-gray-200 bg-white px-2 py-1 pr-3 text-gray-700 shadow-theme-xs transition hover:border-brand-200 hover:text-brand-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
         aria-label="Open user menu"
+        aria-expanded={menuIsOpen}
+        aria-haspopup="menu"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
           {visibleInitials}
@@ -121,7 +147,7 @@ export default function UserDropdown() {
           </span>
         </span>
         <svg
-          className={`hidden text-gray-500 transition-transform duration-200 dark:text-gray-400 sm:block ${isOpen ? "rotate-180" : ""}`}
+          className={`hidden text-gray-500 transition-transform duration-200 dark:text-gray-400 sm:block ${menuIsOpen ? "rotate-180" : ""}`}
           width="18"
           height="18"
           viewBox="0 0 18 18"
@@ -139,8 +165,9 @@ export default function UserDropdown() {
       </button>
 
       <Dropdown
-        isOpen={isOpen}
+        isOpen={menuIsOpen}
         onClose={closeMenu}
+        anchorRef={dropdownAnchorRef}
         className="right-0 mt-3 w-[280px] overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-theme-lg dark:border-gray-800 dark:bg-gray-950"
       >
         <div className="border-b border-gray-100 px-4 py-4 dark:border-gray-800">

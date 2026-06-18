@@ -7,6 +7,7 @@ import Automations from "./pages/Automations/Automations";
 import APIAnalytics from "./pages/APIAnalytics/APIAnalytics";
 import APIKeys from "./pages/APIKeys/APIKeys";
 import Settings from "./pages/Settings/Settings";
+import Workspaces from "./pages/Workspaces/Workspaces";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import ForgotPassword from "./pages/AuthPages/ForgotPassword";
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/api-analytics" element={<APIAnalytics />} />
           <Route path="/api-keys" element={<APIKeys />} />
           <Route path="/users" element={<UsersAccessGate />} />
+          <Route path="/workspaces" element={<Workspaces />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/error-404" element={<NotFound />} />
         </Route>

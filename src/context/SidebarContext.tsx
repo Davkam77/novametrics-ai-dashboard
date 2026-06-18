@@ -62,10 +62,10 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
-    document.addEventListener("keydown", handleEscape);
+    window.addEventListener("keydown", handleEscape, true);
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("keydown", handleEscape, true);
     };
   }, [isMobileOpen]);
 
